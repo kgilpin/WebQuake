@@ -1,0 +1,8 @@
+{
+  "name": "WebQuake",
+  "scripts": {"start": "node WebQDS.js"},
+  "dependencies": {
+    "websocket": "latest",
+    "conjur-api": "latest"
+  }
+}

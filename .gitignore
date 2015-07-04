@@ -1,0 +1,6 @@
+policy*.json
+*.log
+.DS_Store
+node_modules
+data
+id1

@@ -1,0 +1,8 @@
+{
+  "name": "WebQuake",
+  "scripts": {"start": "node web.js"},
+  "dependencies": {
+    "express": "latest",
+    "optimist": "latest"
+  }
+}

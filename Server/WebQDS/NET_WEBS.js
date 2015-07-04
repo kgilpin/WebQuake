@@ -1,7 +1,15 @@
+var url = require('url'),
+	format = require('util').format,
+	fs = require('fs'),
+	conjur = require('conjur-api'),
+	https = require('https')
+	;
+
 WEBS = {};
 
 WEBS.acceptsockets = [];
 WEBS.colors = [];
+WEBS.conjur = {};
 
 WEBS.Init = function()
 {
@@ -17,7 +25,35 @@ WEBS.Init = function()
 
 	WEBS.server = new Node.websocket.server;
 	WEBS.server.on('request', WEBS.ServerOnRequest);
+	
+	var conjurCert = process.env["CONJUR_CERT"];
+	if ( !conjurCert )
+		Sys.Error('CONJUR_CERT is not in the environment')
+  https.globalAgent.options.ca = fs.readFileSync(conjurCert, 'ascii');
 
+	var conjurURL = process.env["CONJUR_URL"];
+	if ( !conjurURL )
+		Sys.Error('CONJUR_URL is not in the environment')
+
+	var urlMatch = conjurURL.match(/^https:\/\/(.+)\/api\/authz\/(.+)/);
+	if ( !urlMatch )
+		Sys.Error(format("Invalid CONJUR_URL %s", url));
+
+	var tokens = urlMatch[2].split('/');
+	var account = tokens[0];
+	var kind = tokens[2];
+	var id = tokens.slice(3, tokens.length).join('/');
+	var authzURL = format('https://%s/api/authz', urlMatch[1]);
+  
+	WEBS.conjur = {
+			resourceId: [ account, kind, id ].join(':'),
+			connect: function(token) {
+				return conjur.authz.connect(authzURL, token);
+			}
+	}
+	
+	console.log(WEBS.conjur);
+	
 	return true;
 };
 
@@ -404,38 +440,40 @@ WEBS.HTTPOnRequest = function(request, response)
 			response.end();
 			return;
 		}
-		if (request.headers.authorization == null)
+		var tokenMatch;
+		var authorization = request.headers.authorization;
+		if ( authorization == null || !( tokenMatch = authorization.match(/^Token token="(.*)"/) ) )
 		{
 			response.statusCode = 401;
-			response.setHeader('WWW-Authenticate', 'Basic realm="Quake"');
 			response.end();
 			return;
 		}
-		var password = request.headers.authorization;
-		if (password.substring(0, 6) !== 'Basic ')
-		{
-			response.statusCode = 403;
+		var token = new Buffer(tokenMatch[1], 'base64');
+		try {
+			token = JSON.parse(token);
+		}
+		catch (e) {
+			response.statusCode = 400;
 			response.end();
 			return;
 		}
-		try
-		{
-			password = (new Buffer(password.substring(6), 'base64')).toString('ascii');
-		}
-		catch (e)
-		{
-			response.statusCode = 403;
-			response.end();
-			return;
-		}
-		if (password.substring(0, 6) !== 'quake:')
-		{
-			response.statusCode = 403;
-			response.end();
-			return;
-		}
-		response.statusCode = (Host.RemoteCommand(request.connection.remoteAddress, data, password.substring(6)) === true) ? 200 : 403;
-		response.end();
+		WEBS.conjur.connect(token).resource(WEBS.conjur.resourceId).checkPermission('rcon', function(err, allowed) {
+			if ( err ) {
+				console.log(err);
+				response.statusCode = 500;
+				response.end();
+			}
+			else {
+				if ( allowed ) {
+					Host.RemoteCommand(request.connection.remoteAddress, data);
+					response.statusCode = 200;
+				}
+				else {
+					response.statusCode = 403;
+				}
+				response.end();
+			}
+		});
 		return;
 	};
 	response.statusCode = 404;

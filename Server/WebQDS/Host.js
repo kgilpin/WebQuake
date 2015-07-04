@@ -180,13 +180,8 @@ Host.ShutdownServer = function(crash)
 	}
 };
 
-Host.RemoteCommand = function(from, data, password)
+Host.RemoteCommand = function(from, data)
 {
-	if ((Host.rcon_password.string.length === 0) || (password !== Host.rcon_password.string))
-	{
-		Con.Print('Bad rcon from ' + from + ':\n' + data + '\n');
-		return;
-	};
 	Con.Print('Rcon from ' + from + ':\n' + data + '\n');
 	Cmd.ExecuteString(data);
 	return true;

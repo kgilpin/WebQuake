@@ -35,14 +35,25 @@ You cannot join multiplayer games if the client is installed on https:// protoco
 
 If you want to create a server, first, install the dedicated server by completing the following steps.
 
+## Mac Prerequites
+
+1. Get the [Shareware version of Quake data files](http://www.quakeone.com/q1files/downloads/mac/Quake106SW_DATA.sit).
+2. The data files are in [StuffIt](https://itunes.apple.com/us/app/stuffit-expander/id405580712?mt=12) format. Download and install (it's free).
+3. `cp -r <path-to-quake.sit>/id1 .`
+
+## General Procedure
+
 1. Install [Node.js](http://nodejs.org).
 2. Download the "Server" folder from the repository.
-3. Put Quake resource files into the downloaded Server folder.
-3. Open Node.js command prompt.
-4. Go (cd) to the Server folder.
-5. Type `npm install websocket` (for more information, see [Worlize/WebSocket-Node](https://github.com/Worlize/WebSocket-Node) repository).
+3. Put Quake resource files into the downloaded Server folder. See Mac instructions above to create `id1` folder.
+4. `cd Server`
+5. `npm install` (for more information, see [Worlize/WebSocket-Node](https://github.com/Worlize/WebSocket-Node) repository).
 
-Then, to launch a server, open Node.js command prompt, go to the Server folder and type `node WebQDS.js`.
+Then, to launch a server:
+
+```sh-session
+$ npm start
+```
 
 To change maximum number of players, use `-maxplayers` command line argument.
 
