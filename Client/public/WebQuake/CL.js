@@ -476,11 +476,6 @@ CL.visedicts = [];
 
 CL.Rcon_f = function()
 {
-	if (CL.rcon_password.string.length === 0)
-	{
-		Con.Print('You must set \'rcon_password\' before\nissuing an rcon command.\n');
-		return;
-	}
 	var to;
 	if ((CL.cls.state === CL.active.connected) && (CL.cls.netcon != null))
 	{
@@ -496,15 +491,6 @@ CL.Rcon_f = function()
 		}
 		to = CL.rcon_address.string;
 	}
-	var pw;
-	try
-	{
-		pw = btoa('quake:' + CL.rcon_password.string);
-	}
-	catch (e)
-	{
-		return;
-	}
 	var message = '', i;
 	for (i = 1; i < Cmd.argv.length; ++i)
 		message += Cmd.argv[i] + ' ';
@@ -518,7 +504,6 @@ CL.Rcon_f = function()
 	}
 	var xhr = new XMLHttpRequest();
 	xhr.open('HEAD', 'http://' + to + '/rcon/' + message);
-	xhr.setRequestHeader('Authorization', 'Basic ' + pw);
 	xhr.send();
 };
 
@@ -989,7 +974,6 @@ CL.Init = function()
 	CL.m_yaw = Cvar.RegisterVariable('m_yaw', '0.022', true);
 	CL.m_forward = Cvar.RegisterVariable('m_forward', '1', true);
 	CL.m_side = Cvar.RegisterVariable('m_side', '0.8', true);
-	CL.rcon_password = Cvar.RegisterVariable('rcon_password', '');
 	CL.rcon_address = Cvar.RegisterVariable('rcon_address', '');
 	Cmd.AddCommand('entities', CL.PrintEntities_f);
 	Cmd.AddCommand('disconnect', CL.Disconnect);
