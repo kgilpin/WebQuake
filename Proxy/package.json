@@ -1,0 +1,12 @@
+{
+  "name": "WebQuake-Proxy",
+  "scripts": {"start": "node app.js"},
+  "dependencies": {
+    "http-proxy": "latest",
+    "conjur-api": "latest",
+    "netrc": "latest",
+    "expand-home-dir": "latest",
+    "underscore": "latest",
+    "js-yaml": "latest"
+  }
+}
