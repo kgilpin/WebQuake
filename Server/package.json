@@ -1,5 +1,5 @@
 {
-  "name": "WebQuake",
+  "name": "WebQuake-Server",
   "scripts": {"start": "node WebQDS.js"},
   "dependencies": {
     "websocket": "latest",

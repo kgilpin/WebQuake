@@ -4,24 +4,33 @@
 
 [Online demo by SpiritQuaddicted](http://quaddicted.com/forum/viewtopic.php?pid=438).
 
-# Installing and running
+# Mac Prerequites
 
-Follow these steps to install WebQuake:
+1. Get the [Shareware version of Quake data files](http://www.quakeone.com/q1files/downloads/mac/Quake106SW_DATA.sit).
+2. The data files are in [StuffIt](https://itunes.apple.com/us/app/stuffit-expander/id405580712?mt=12) format. Download and install (it's free).
 
-1. Install a web server with HTTP 1.1 Range support. The project was developed and tested on [Abyss Web Server](http://www.aprelium.com/abyssws/) on Windows, so it's guaranteed to work on it.
-2. Download entire contents of the Client folder (WebQuake.htm and WebQuake/ folder) from the Code tab and put it somewhere on your server.
-3. Get Quake resource files. The demo version containing only the first episode is enough.
-4. Copy the `id1` folder from the Quake folder to the folder where you put WebQuake.htm.
-5. If you have Quake mission packs, repeat step 4 for `hipnotic` and/or `rogue` folders.
-6. If you're running a system with case-sensitive names (such as Linux), make sure that all game files **except for code files** have lowercase names.
+# Running the client
 
-To launch WebQuake, go to WebQuake.htm on your server in your browser.
+Follow these steps to run the WebQuake client:
+
+1. Install the data files `id1` folder to `Web/public/id1`. 
+2. If you have Quake mission packs, repeat step 4 for `hipnotic` and/or `rogue` folders.
+1. If you're running a system with case-sensitive names (such as Linux), make sure that all game files **except for code files** have lowercase names.
+
+Launch the server:
+
+```sh-session
+$ cd Web
+$ npm install
+$ node web.js -p 3001
+To play Quake, go to http://localhost:3001
+```
 
 To launch the game with command line arguments, add ? after the address and put the arguments after it in the same format as you use for Quake.
 
 For Scourge of Armagon, add `-hipnotic` command line argument. For Dissolution of Eternity, add `-rogue`.
 
-To launch mods, copy the mod folder into the folder containing WebQuake.htm and add `-game MOD_NAME_HERE` command line argument. Ensure step 6 of the installing instructions for the mod folder.
+To launch mods, copy the mod folder into the `public` folder and add `-game MOD_NAME_HERE` command line argument. 
 
 To use browser hotkeys (such as F5, Ctrl+T and Ctrl+W), click the address bar, and when you're done, click the game.
 
@@ -35,40 +44,38 @@ You cannot join multiplayer games if the client is installed on https:// protoco
 
 If you want to create a server, first, install the dedicated server by completing the following steps.
 
-## Mac Prerequites
-
-1. Get the [Shareware version of Quake data files](http://www.quakeone.com/q1files/downloads/mac/Quake106SW_DATA.sit).
-2. The data files are in [StuffIt](https://itunes.apple.com/us/app/stuffit-expander/id405580712?mt=12) format. Download and install (it's free).
-3. `cp -r <path-to-quake.sit>/id1 .`
-
 ## General Procedure
 
-1. Install [Node.js](http://nodejs.org).
-2. Download the "Server" folder from the repository.
-3. Put Quake resource files into the downloaded Server folder. See Mac instructions above to create `id1` folder.
-4. `cd Server`
-5. `npm install` (for more information, see [Worlize/WebSocket-Node](https://github.com/Worlize/WebSocket-Node) repository).
-
-Then, to launch a server:
+1. `cd Server`
+1. Copy Quake resource files into the `id1` directory.
+1. Run `npm install`.
+1. Load the Conjur policy:
 
 ```sh-session
-$ npm start
+$ conjur policy load -c policy-sandbox.json policy.rb
+$ account=$(ruby -ryaml -e "puts YAML.load(File.read(File.expand_path('~/accounts/kegdev/.conjurrc')))['account']")
+$ policy=$(cat policy-sandbox.json | jsonfield policy)
+```
+
+Launch the server:
+
+```sh-session
+$ CONJUR_CERT=~/conjur-$account.pem \
+	CONJUR_URL="https://kegdev.conjur.itd.conjur.net/api/authz/$account/resources/webservice/$policy/quake2-1.0/server" \
+	node WebQDS -port 20001
 ```
 
 To change maximum number of players, use `-maxplayers` command line argument.
 
 ## Remote console
 
-To execute console commands on the server from the client or the web, set `rcon_password` in the server console. If you have spaces in the password, surround it with quotes.
+To perform `rcon` (Remote Control) commands from the web client, the traffic needs to be directed through the Authorization proxy. `rcon_password` has been removed since it's insecure.
 
-Don't tell the password to anyone except for the server admins. **Don't put the password in the command line, as everybody on the web can see your command line on your server's `/rule_info` page!**
+You have several ways to execute server commands:
 
-Then, you have 4 ways to execute server commands:
-
-* In the game, when not connected, in the console, type `rcon_address ip:port` (without ws://), `rcon_password server_RCON_password` (surround the password with quotes if you have spaces in it), and then execute the commands by typing `rcon your_command_here`.
+* In the game, when not connected, in the console, type `rcon_address ip:port` (without ws://), and then execute the commands by typing `rcon your_command_here`.
 * In the game, when connected to the server, do the same as in the previous way except for settings `rcon_address`.
-* Go to the server IP in the browser (for example, if your server is at `ws://192.168.0.2:26000`, go to `http://192.168.0.2:26000`). On the Rcon line, enter your command in the left field and the password in the right field and press Send.
-* Go to `http://ip:port/rcon/your_command_here` in the browser. Login as "quake" with your RCON password.
+* Go to the proxy IP in the browser (for example, if your proxy is at `ws://localhost:8015`, go to `http://localhost:8015`). On the Rcon line, enter your command in the left field and the password in the right field and press Send.
 
 ## Server info API
 
